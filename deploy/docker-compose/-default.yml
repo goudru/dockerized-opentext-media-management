@@ -1,0 +1,144 @@
+# This file is loaded in addition to the regular docker-compose.yml only for the 'machine-name-here' environment; see https://docs.docker.com/compose/extends/#different-environments
+
+version: '3'
+
+services:
+  default:
+    # This container exists only to supply default values for the other containers to inherit
+    # It serves no function in the app itself, and exits immediately on startup
+    image: alpine
+    entrypoint: ['/bin/sh']
+    environment: &default_environment
+      #
+      # Common across all environments
+      #
+      # From docker/.env:
+      DOCKER_MODE: $DOCKER_MODE
+      OBJECTS_ROOT_URL: $OBJECTS_ROOT_URL
+      # General
+      ADMIN_EMAIL_ADDRESS: noreply@opentext.com
+      EMAIL_HOST: smtp.opentext.com
+      EMAIL_PORT: 25
+      # Docker
+      DEPLOY_CUSTOMIZATIONS: 'true' # Include our customizations, or start up an out-of-the-box OpenText Media Management app
+      # Postgres
+      POSTGRES_SERVER: postgres # Hostname of Postgres server
+      POSTGRES_USER: postgres
+      #
+      # Specific to this environment
+      #
+      # General
+      APP_ROOT_URL: https://machine-name-here.opentext.com
+      APP_SERVER: machine-name-here.opentext.com
+      DOCKER_MACHINE: machine-name-here
+      KEYSTORE_PASSWORD: MediaVault
+      # OpenText Media Management
+      OTMM_ADMIN_PASSWORD: MediaVault # Password of `tsuper`
+      # OpenText Directory Services
+      OTDS_ADMIN_PASSWORD: MediaVault1! # Password of `otadmin@otds.admin` user; note that password must contain at least one number and one symbol
+      # Postgres
+      POSTGRES_PASSWORD: MediaVault # Password of `postgres` user
+      DATABASE_USER_PASSWORD: MediaVault # Password of `tsuper` and `ffmpeg`
+      # Solr
+      SOLR_ADMIN_PASSWORD: MediaVault # Password of `solr` user via Nginx proxy
+
+
+  postgres:
+    environment:
+      <<: *default_environment
+
+  solr:
+    environment:
+      <<: *default_environment
+
+  ffmpeg:
+    environment:
+      <<: *default_environment
+
+  nginx-for-repository:
+    environment:
+      <<: *default_environment
+      SSL_CERTIFICATE: |
+        -----BEGIN CERTIFICATE-----
+        MIIEWzCCA0OgAwIBAgIJALMB1GItlJExMA0GCSqGSIb3DQEBCwUAMIGDMQswCQYD
+        VQQGEwJPWjETMBEGA1UECAwKTGFuZCBvZiBPejEVMBMGA1UEBwwMRW1lcmFsZCBD
+        aXR5MSAwHgYDVQQKDBdObyBQbGFjZSBMaWtlIExvY2FsaG9zdDESMBAGA1UECwwJ
+        TG9jYWxob3N0MRIwEAYDVQQDDAlMb2NhbGhvc3QwHhcNMTcwMzI4MTYxOTIwWhcN
+        MjcwMzI2MTYxOTIwWjCBgzELMAkGA1UEBhMCT1oxEzARBgNVBAgMCkxhbmQgb2Yg
+        T3oxFTATBgNVBAcMDEVtZXJhbGQgQ2l0eTEgMB4GA1UECgwXTm8gUGxhY2UgTGlr
+        ZSBMb2NhbGhvc3QxEjAQBgNVBAsMCUxvY2FsaG9zdDESMBAGA1UEAwwJTG9jYWxo
+        b3N0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArD22Jw/CWyyzxFnU
+        nCsWtKN/jg2BVht6Eo5703og45LrJ5gBeNArPpOoraP1EICaQ2PSdbazWF+oZu2z
+        XRk0raIfIjP4lbDW5tIzLzDvOL5BqGoS6skPtORcvNq7C0X/VrXUJaqyQwdBdtwI
+        JhCxbPxeu2nZdTj/7GTWem6A7P6VX2zMwTVHRtOKTVkVhuXglIQgZNgwYwl9Ix/Q
+        ZsBxmOd2siKRWdzk3TGCNMSS+sUt4pzjnvFUjgH317Gb/OvLE4gdQvHtJMdO6S3l
+        9rHr6gnprF5QFRWp7ik49e1I+D/LVeJSF14Rqkdzer1+zLrs2313H75GZ+R1asOJ
+        s76cIwIDAQABo4HPMIHMMB0GA1UdDgQWBBSeYzx3MPAf6ffFRyrbpxOKwYAu+TAf
+        BgNVHSMEGDAWgBSeYzx3MPAf6ffFRyrbpxOKwYAu+TAJBgNVHRMEAjAAMAsGA1Ud
+        DwQEAwIFoDBEBgNVHREEPTA7gglsb2NhbGhvc3SCFWxvY2FsaG9zdC5sb2NhbGRv
+        bWFpboIJMTI3LjAuMC4xggM6OjGCB2ZlODA6OjEwLAYJYIZIAYb4QgENBB8WHU9w
+        ZW5TU0wgR2VuZXJhdGVkIENlcnRpZmljYXRlMA0GCSqGSIb3DQEBCwUAA4IBAQB/
+        2Eiula3X1qb/XveumxUZCn+BtXNHidJ9WjZK8fERAp004+RE3+dDJvefjZfXl82G
+        2A/JX/j9R8I7MYzK+ruVdHYOkdAQfB1Ch0RrX5bdzMuTMbdhTeP/HMa4eX6y1YxL
+        yhXrNWHwCZNhzKGhIX3px5MzulI5QxxiyIVJqMRZOLGIK/gWPZG46MWxVPJPB+cE
+        y5pagSkcDPaRgfGy+4MqJMOBD2uMPtlw5otv5mymsgNxKppdL7oKy5/NL786F0hQ
+        AUJHU2eMGdJ58jtp3WpnPSGwI87TELAPiyvCh7N4F+17AbYksUy+PxspjeX+kG+n
+        FWVwJcX8zm/b7bXNJdwX
+        -----END CERTIFICATE-----
+      SSL_CERTIFICATE_KEY: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEpQIBAAKCAQEArD22Jw/CWyyzxFnUnCsWtKN/jg2BVht6Eo5703og45LrJ5gB
+        eNArPpOoraP1EICaQ2PSdbazWF+oZu2zXRk0raIfIjP4lbDW5tIzLzDvOL5BqGoS
+        6skPtORcvNq7C0X/VrXUJaqyQwdBdtwIJhCxbPxeu2nZdTj/7GTWem6A7P6VX2zM
+        wTVHRtOKTVkVhuXglIQgZNgwYwl9Ix/QZsBxmOd2siKRWdzk3TGCNMSS+sUt4pzj
+        nvFUjgH317Gb/OvLE4gdQvHtJMdO6S3l9rHr6gnprF5QFRWp7ik49e1I+D/LVeJS
+        F14Rqkdzer1+zLrs2313H75GZ+R1asOJs76cIwIDAQABAoIBAHdQEFwiqImr/6Mm
+        bwb3OjVLhNKMPGm/guJT3SbzVNEQNuEohOyBl1MzygbuqpYR38qK3YE5XCb9rJQQ
+        WM1G5pzYzyRMSAi5hURDm7028p+l+6mEQTJusPinsC4KfsMia+xO7HRjODUCU7DY
+        XrSvn5hVgfHlMwPmxjGk8IXDAoAn/54ckMBrkjCJydnV2M8WrBFrBFl4huLI3xnq
+        wVg9Htokif4ucmenAiUMNek/nakqU6s1dlqIS+wDuoWgbVwg2oGaogj4m2LO4DNV
+        4Uc6wjf7MeKLJDOianCCCdB6BiJcCUXCtROtVR9mxygS//JtC+fH4KY84HJcnH20
+        zsBJtHECgYEA176JTn9fmLFkYOitj3rAKsPqrirFDl3Lmq7XpHxsI0XolKexP8le
+        ILX6YO/AIplgaf2LJMObcvqKJjKidUL8jY0ErLZ7rUlpaQE2X6UoKxXdidaj03Et
+        FyYbhJ/C7zkEukcnbZX2b1a/s3w1p/cI2pMZhsPEhAKOi1+nGDqacs0CgYEAzGEn
+        zKJIV55D2hO07QWZAqEFxeJwg1HmXiLMiN/iHBiUMSnTsY0akscUVPLWRdudGwUr
+        5tlEluFBLIETsNV8TWb/Br2NMr5tBwovGW8kiTlUTKE++hqeF8RLlc3WZ53nN3AV
+        BZq13YJeVXrQSgU/22Bs0tUu6429IyGJKS+mqq8CgYEAwFJ0KGvXllCcgN8qyTrN
+        z9GyhOxPmgz3Eb9HMLRR2efZ+5q5oXkq1dIjjwJqru03S4Tf4zgUfRzmxkJhHFNI
+        vA632hcajVFiDF8uT3j1I+NsCBI1HKpJXdd0tHeO2J5lnoELnt8OPhaA8cmKM18+
+        n0p+eOpPZra4x3nPhQPI5wkCgYEAhQvOI9mU7Gzb0NA5XH7jX6HBJ1PEWMhtBeTz
+        bzsHb7DUb7jB1Xh8zwYIB1DaCjnv6RIRxUK08t+KVNVmIxymwaCF7jZg/6KVSRrp
+        FE6U4zvN0+C4JYpEVkZzyf5oT6WsShuNo8tWDu/6Rv0fMMCAFGiODyW2WKM5d/Ax
+        4PzjK4MCgYEAm8y30j9VV/31W0KRxK9fiCYiwu6yoIcPnXyF3JS7g9+jZQZaYSzq
+        df/Ut3BrmRZiZKRVS+UieD5KpKNo+E0pAYrO0XgGRPLmjWegNqFFjWT0d8vra92a
+        /JbxCUFWf8X3X7JPOn+Hlz/VvOXKy0gxhSAtb9vd+5z0RGeZ8IL9+2o=
+        -----END RSA PRIVATE KEY-----
+      SSL_DHPARAM: |
+        -----BEGIN DH PARAMETERS-----
+        MIIBCAKCAQEAsSKY3K9w6VmRv4Mn7AAXK/U6S6DbBflqUNmEBsVkRUhSU15GVayj
+        8pNE7PWa0kDqVEvxb/DAauwQMhEyNHXxTYmrVRU1s2qmjSPR53ERvd6sjxKWhlya
+        65KUZhjPWQ8GwYtlrJFvCd+mPdh5dQmCWhI2jQusxCTkVo4AjleaamDsqTAat+pI
+        0FKmsGAEHLrSFJeVz4DlP+FxPsmbd6L9RyWIzLtXb6lOY86U5K8UfVpyL9nAN0zx
+        3otpq4upnjiU5sYXmeYwLeUdrvrLyJSWqM43QoSDwM648TaWMAKbJgiXkZJYouXs
+        wOI8ijB2iWUCkh8uPklI8Z9NgQxetVS36wIBAg==
+        -----END DH PARAMETERS-----
+
+  opentext-directory-services:
+    environment:
+      <<: *default_environment
+
+  opentext-media-management-core-app:
+    environment:
+      <<: *default_environment
+
+  opentext-media-management-indexer:
+    environment:
+      <<: *default_environment
+
+  nginx-for-proxy:
+    environment:
+      <<: *default_environment
+
+  maildev:
+    environment:
+      <<: *default_environment
